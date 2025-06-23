@@ -18,28 +18,28 @@ from weakref import WeakSet
 from llama_index_instrumentation import get_dispatcher
 from pydantic import ValidationError
 
-from .checkpointer import Checkpoint, CheckpointCallback
-from .context import BaseSerializer, Context, JsonSerializer
-from .decorators import StepConfig, step
-from .errors import (
+from workflows.checkpointer import Checkpoint, CheckpointCallback
+from workflows.context import BaseSerializer, Context, JsonSerializer
+from workflows.decorators import StepConfig, step
+from workflows.errors import (
     WorkflowConfigurationError,
     WorkflowDone,
     WorkflowRuntimeError,
     WorkflowTimeoutError,
     WorkflowValidationError,
 )
-from .events import (
+from workflows.events import (
     Event,
     HumanResponseEvent,
     InputRequiredEvent,
     StartEvent,
     StopEvent,
 )
-from .handler import WorkflowHandler
-from .resource import ResourceManager
-from .service import ServiceManager
-from .types import RunResultT
-from .utils import (
+from workflows.handler import WorkflowHandler
+from workflows.resource import ResourceManager
+from workflows.service import ServiceManager
+from workflows.types import RunResultT
+from workflows.utils import (
     ServiceDefinition,
     get_steps_from_class,
     get_steps_from_instance,
@@ -411,7 +411,7 @@ class Workflow(metaclass=WorkflowMeta):
 
                 if exception_raised:
                     # cancel the stream
-                    ctx.write_event_to_stream(StopEvent())
+                    ctx.write_event_to_stream(StopEvent(result=exception_raised))
 
                     raise exception_raised
 
@@ -420,6 +420,10 @@ class Workflow(metaclass=WorkflowMeta):
                     ctx.write_event_to_stream(StopEvent())
 
                     msg = f"Operation timed out after {self._timeout} seconds"
+                    ctx.write_event_to_stream(
+                        StopEvent(result=WorkflowTimeoutError(msg))
+                    )
+
                     raise WorkflowTimeoutError(msg)
 
                 result.set_result(ctx._retval)
