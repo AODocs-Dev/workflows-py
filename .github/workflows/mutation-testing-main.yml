@@ -1,0 +1,20 @@
+name: Mutation scan
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  mutation-main-scan:
+    uses: AODocs-Dev/aodocs-github-actions/.github/workflows/mutation.yml@workflows-v4.34.0
+    with:
+      full-coverage: true
+    secrets: inherit
